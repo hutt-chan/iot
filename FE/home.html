@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitor Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
+</head>
+<body>
+    <header>
+        <div style="display:flex; align-items:center;">
+            <h1 class="title">⚛ MONITOR</h1>
+        </div>
+        <nav>
+            <a href="home.html">Home</a>
+            <a href="ds.html">Data-Sensors</a>
+            <a href="history.html">History</a>
+            <a href="profile.html">About me</a>
+        </nav>
+    </header>
+
+    <section class="cards">
+        <div class="card temperature">
+            <div class="card-content">
+                ☀️Temperature <br>
+                <span id="temp" style="font-size: 60px; font-weight: 800">--℃</span>
+            </div>
+        </div>
+        <div class="card humidity">
+            <div class="card-content">
+                💦Humidity <br>
+                <span id="humi" style="font-size: 60px; font-weight: 800">--%</span>
+            </div>
+        </div>
+        <div class="card light">
+            <div class="card-content">
+                🌟Light <br>
+                <span id="light" style="font-size: 60px; font-weight: 800">-- lux</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="chart">
+            <canvas id="myChart"></canvas>
+        </div>
+        <div class="devices">
+            <h3 style="font-size: 25px; font-weight: 800;">Control Device</h3>
+            <div class="device">Fan 🌀
+                <label class="switch">
+                    <input type="checkbox" id="fan-switch">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="device">Air Conditioner ❄️
+                <label class="switch">
+                    <input type="checkbox" id="ac-switch">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="device">Light 🌟
+                <label class="switch">
+                    <input type="checkbox" id="light-switch">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/chart.js"></script>
+    <script src="js/mqtt.js"></script>
+</body>
+</html>

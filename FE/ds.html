@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitor Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
+</head>
+<body>
+    <header>
+        <div style="display:flex; align-items:center;">
+            <h1 class="title">⚛ MONITOR</h1>
+        </div>
+        <nav>
+            <a href="home.html">Home</a>
+            <a href="ds.html">Data-Sensors</a>
+            <a href="history.html">History</a>
+            <a href="profile.html">About me</a>
+        </nav>
+    </header>
+
+    <div class="data-container">
+        <div class="data-header">
+            <h2>Data Sensor IoT</h2>
+            <div class="search-filter-section">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search...">
+                    <select id="searchType">
+                        <option value="all">All</option>
+                        <option value="temperature">Temperature</option>
+                        <option value="humidity">Humidity</option>
+                        <option value="light">Light</option>
+                        <option value="datetime">DateTime</option>
+                    </select>
+                    <button onclick="searchData()">🔍︎ Search</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">ID ↕️</th>
+                        <th onclick="sortTable(1)">Temperature (°C) ↕️</th>
+                        <th onclick="sortTable(2)">Humidity (%) ↕️</th>
+                        <th onclick="sortTable(3)">Light (lux) ↕️</th>
+                        <th onclick="sortTable(4)">DateTime ↕️</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <button id="prevBtn" onclick="changePage(-1)">← Previous</button>
+            <div id="pageNumbers"></div>
+            <button id="nextBtn" onclick="changePage(1)">Next →</button>
+        </div>
+
+        <div class="table-info">
+            <span id="tableInfo">Show 1-10 of 100</span>
+        </div>
+    </div>
+
+    <!-- JS tách riêng -->
+    <script src="js/ds.js"></script>
+</body>
+</html>

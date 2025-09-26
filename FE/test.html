@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MQTT FE Test</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+  <h2>MQTT Frontend Test</h2>
+
+  <button onclick="sendMessage()">Gửi lệnh</button>
+  <div id="log"></div>
+
+  <script>
+    // Kết nối đến Mosquitto qua WebSocket (cổng 9001)
+    const client = mqtt.connect("ws://localhost:9001");
+
+    client.on("connect", function () {
+      log("✅ Kết nối thành công MQTT broker!");
+      client.subscribe("device/action", function (err) {
+        if (!err) {
+          log("📩 Đã subscribe topic: device/action");
+        }
+      });
+    });
+
+    client.on("message", function (topic, message) {
+      log("📥 Nhận được từ " + topic + ": " + message.toString());
+    });
+
+    function sendMessage() {
+      client.publish("device/action", "ON");
+      log("📤 Gửi lệnh: ON");
+    }
+
+    function log(msg) {
+      const logDiv = document.getElementById("log");
+      logDiv.innerHTML += "<p>" + msg + "</p>";
+    }
+  </script>
+</body>
+</html>
