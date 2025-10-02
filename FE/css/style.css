@@ -3,11 +3,13 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: Arial, sans-serif;
+    font-family: Quicksand, sans-serif;
 }
 
 body {
-    font-family: 'Open Sans', sans-serif;
+    /* font-family: 'Open Sans', sans-serif; */
+    /* font-family: 'Poppins', sans-serif; */
+    font-family: 'Quicksand', sans-serif;
     background-color: #667EEA;
     color: #fff;
 }
@@ -23,29 +25,47 @@ header img {
     height: 120px;
 }
 
+
+
 .title {
     margin-left: 20px;
     margin-top: 5px;
-    font-size: 30pt;
+    font-size: 25pt;
     font-weight: 800;
     /* text-shadow: 2px 2px 4px rgba(0,0,0,0.7); */
 }
 
+/* Container cho thanh nav */
 nav {
     display: flex;
-    gap: 30px;
+    gap: 30px;          /* khoảng cách giữa các link */
     font-size: 18px;
     font-weight: bold;
+    align-items: center; /* canh giữa theo chiều dọc */
 }
 
+/* Các link trong nav */
 nav a {
-    text-decoration: none;
+    text-decoration: none; /* bỏ gạch chân mặc định */
     color: white;
-    font-size: 22pt;
-    font-weight: 800;
-    margin-right: 20px;
-    margin-top: 5px;
+    font-size: 20pt;
+    font-weight: 700;
+    padding: 5px 0;      /* khoảng cách trên dưới để gạch chân đẹp */
+    position: relative;  /* cần cho ::after hiển thị gạch chân */
 }
+
+/* Dấu gạch chân cho trang hiện tại */
+nav a.active::after {
+    content: "";
+    display: block;
+    height: 3px;
+    width: 100%;
+    background-color: white;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
 
 .cards {
     display: flex;
@@ -54,8 +74,8 @@ nav a {
 }
 
 .card {
-    width: 400px;
-    height: 150px;
+    width: 450px;
+    height: 200px;
     margin-top: 20px;
     border-radius: 10px;
     position: relative;
@@ -112,8 +132,8 @@ nav a {
 
 .chart {
     /* Đặt chiều rộng cho biểu đồ */
-    width: 65%; 
-    height: 380px;
+    width: 70%; 
+    height: 500px;
     background: white;
     border-radius: 10px;
     padding: 10px; /* Tăng padding để chart có không gian hơn */
@@ -127,19 +147,20 @@ nav a {
 }
 
 .devices {
-    width: 30%; 
+    width: 25%; 
     height: 380px;
     background: white;
     border-radius: 10px;
     padding: 5px 20px 0px 20px;
-    color: black;
-    font-size: 35px;
+    color: #252525;
+    /* font-size: 40px; */
     font-weight: 700;
 
     display: flex;
     flex-direction: column;
     align-items: center; /* căn giữa ngang tất cả */
 }
+
 
 .devices h3 {
     text-align: center; /* căn giữa chữ */
@@ -149,10 +170,13 @@ nav a {
 .device {
     font-size: 25px;
     display: flex;
-    flex-direction: column;   /* chữ trên, switch dưới */
-    align-items: center;      /* căn giữa ngang */
-    margin: 15px 0;           /* khoảng cách giữa các device */
+    flex-direction: row;   /* chữ và switch nằm ngang */
+    align-items: center;   /* căn giữa theo chiều dọc */
+    justify-content: space-between; /* tạo khoảng cách chữ - switch */
+    width: 100%;           /* cho chiếm hết ngang để justify có tác dụng */
+    margin: 15px 0;
 }
+
 
 
 /* Toggle switch */

@@ -1,7 +1,7 @@
 let currentData = [];
 let filteredData = [];
 let currentPage = 1;
-const recordsPerPage = 5;
+const recordsPerPage = 10;
 let sortColumn = -1;
 let sortDirection = 'asc';
 
@@ -36,21 +36,24 @@ async function initTable() {
 // Tải dữ liệu từ API
 async function loadData() {
     try {
-        const response = await fetch('http://localhost:3000/api/history?page=1&limit=1000');
-        const data = await response.json();
+        // const response = await fetch('http://localhost:3000/api/history?page=1&limit=1000');
+        const res = await fetch('http://localhost:3000/api/history/all');
+        const data = await res.json();
+
         
         if (data && data.length > 0) {
             currentData = data.map((item, index) => ({
                 id: item.id || (index + 1),
                 device: item.device || 'Unknown',
                 action: item.action || 'Unknown',
-                time: formatDateTime(new Date(item.time)),
+                // time: formatDateTime(new Date(item.time)),
+                time: formatDateTime(new Date(item.datetime.replace(" ", "T"))),
                 description: item.description || 'No description'
             }));
             
             filteredData = [...currentData];
-            console.log('Loaded REAL history data from API:', currentData.length, 'records');
-            updateDataStatus(`Real data from API (${currentData.length})`, 'success');
+            console.log('Loaded history data from API:', currentData.length, 'records');
+            updateDataStatus(`Data from API (${currentData.length})`, 'success');
         } else {
             console.log('No history data found in API');
             currentData = [];
@@ -124,8 +127,8 @@ function applyFilters() {
     const actionFilter = document.getElementById('actionFilter').value;
     
     filteredData = currentData.filter(row => {
-        let deviceMatch = deviceFilter === 'all' || row.device === deviceFilter;
-        let actionMatch = actionFilter === 'all' || row.action === actionFilter;
+        let deviceMatch = deviceFilter === 'ALL' || row.device === deviceFilter;
+        let actionMatch = actionFilter === 'ALL' || row.action === actionFilter;
         return deviceMatch && actionMatch;
     });
     
@@ -218,6 +221,36 @@ document.getElementById('searchInput').addEventListener('keypress', function(eve
         searchData();
     }
 });
+
+// Hàm copy vào clipboard
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        console.log("Copied:", text);
+    }).catch(err => {
+        console.error("Failed to copy:", err);
+    });
+}
+
+
+// Gắn sự kiện cho cột DateTime (cột số 4 - index = 4)
+document.addEventListener("DOMContentLoaded", () => {
+    const table = document.getElementById("dataTable");
+
+    table.addEventListener("click", (e) => {
+        if (e.target.tagName === "TD" && e.target.cellIndex === 3) {
+            const datetimeValue = e.target.textContent.trim();
+            copyToClipboard(datetimeValue);
+
+            // Hiệu ứng báo copy thành công
+            e.target.style.backgroundColor = "#667EEA";
+            setTimeout(() => {
+                e.target.style.backgroundColor = "";
+            }, 500);
+        }
+    });
+});
+
+
 
 // Khởi tạo khi tải trang
 window.onload = initTable;

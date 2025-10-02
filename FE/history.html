@@ -3,10 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Monitor Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet"> -->
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"> -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
+    <link rel="icon" type="image/png" href="img/favicon.png">
 </head>
 <body>
     <header>
@@ -36,7 +41,7 @@
                     <div class="filter-group">
                         <label>Device:</label>
                         <select id="deviceFilter">
-                            <option value="all">All</option>
+                            <option value="ALL">ALL</option>
                             <option value="fan">Fan</option>
                             <option value="air_conditioner">Air Conditioner</option>
                             <option value="light">Light</option>
@@ -45,7 +50,7 @@
                     <div class="filter-group">
                         <label>Action:</label>
                         <select id="actionFilter">
-                            <option value="all">All</option>
+                            <option value="ALL">ALL</option>
                             <option value="ON">ON</option>
                             <option value="OFF">OFF</option>
                         </select>
@@ -59,10 +64,10 @@
             <table id="dataTable">
                 <thead>
                     <tr>
-                        <th onclick="sortTable(0)">ID ↕️</th>
+                        <th onclick="sortTable(0)">ID ↑↓</th>
                         <th>Device</th>
                         <th>Action</th>
-                        <th onclick="sortTable(3)">DateTime ↕️</th>
+                        <th onclick="sortTable(3)">DateTime ↑↓</th>
                         <th>Description</th>
                     </tr>
                 </thead>
@@ -77,7 +82,7 @@
         </div>
 
         <div class="table-info">
-            <span id="tableInfo">Show 1-10 of 100</span>
+            <span id="tableInfo">Show 1-10 of ?</span>
         </div>
     </div>
 

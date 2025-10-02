@@ -3,10 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Monitor Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet"> -->
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"> -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
+    <link rel="icon" type="image/png" href="img/favicon.png">
 </head>
 <body>
     <header>
@@ -14,7 +19,7 @@
             <h1 class="title">⚛ MONITOR</h1>
         </div>
         <nav>
-            <a href="home.html">Home</a>
+            <a href="home.html" class="active">Home</a>
             <a href="ds.html">Data-Sensors</a>
             <a href="history.html">History</a>
             <a href="profile.html">About me</a>
@@ -47,14 +52,14 @@
             <canvas id="myChart"></canvas>
         </div>
         <div class="devices">
-            <h3 style="font-size: 25px; font-weight: 800;">Control Device</h3>
+            <h3 style="font-size: 35px; font-weight: bold;">Control Device</h3>
             <div class="device">Fan 🌀
                 <label class="switch">
                     <input type="checkbox" id="fan-switch">
                     <span class="slider"></span>
                 </label>
             </div>
-            <div class="device">Air Conditioner ❄️
+            <div class="device">AC ❄️
                 <label class="switch">
                     <input type="checkbox" id="ac-switch">
                     <span class="slider"></span>

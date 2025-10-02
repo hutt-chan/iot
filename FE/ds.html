@@ -3,10 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Monitor Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet"> -->
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"> -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
+    <link rel="icon" type="image/png" href="img/favicon.png">
 </head>
 <body>
     <header>
@@ -15,7 +20,7 @@
         </div>
         <nav>
             <a href="home.html">Home</a>
-            <a href="ds.html">Data-Sensors</a>
+            <a href="ds.html" class="active">Data-Sensors</a>
             <a href="history.html">History</a>
             <a href="profile.html">About me</a>
         </nav>
@@ -43,11 +48,11 @@
             <table id="dataTable">
                 <thead>
                     <tr>
-                        <th onclick="sortTable(0)">ID ↕️</th>
-                        <th onclick="sortTable(1)">Temperature (°C) ↕️</th>
-                        <th onclick="sortTable(2)">Humidity (%) ↕️</th>
-                        <th onclick="sortTable(3)">Light (lux) ↕️</th>
-                        <th onclick="sortTable(4)">DateTime ↕️</th>
+                        <th onclick="sortTable(0)">ID ↑↓</th>
+                        <th onclick="sortTable(1)">Temperature (°C) ↑↓</th>
+                        <th onclick="sortTable(2)">Humidity (%) ↑↓</th>
+                        <th onclick="sortTable(3)">Light (lux) ↑↓</th>
+                        <th onclick="sortTable(4)">DateTime ↑↓</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>

@@ -1,5 +1,3 @@
-// chart.js
-
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('myChart');
     if (!canvas) return;
@@ -10,9 +8,30 @@ document.addEventListener('DOMContentLoaded', () => {
         data: {
             labels: [],
             datasets: [
-                { label: 'Temperature (°C)', data: [], borderColor: 'blue', borderWidth: 2, fill: false, yAxisID: 'y' },
-                { label: 'Humidity (%)', data: [], borderColor: 'orange', borderWidth: 2, fill: false, yAxisID: 'y' },
-                { label: 'Light (Lux)', data: [], borderColor: 'green', borderWidth: 2, fill: false, yAxisID: 'y' }
+                { 
+                    label: 'Temperature (°C)', 
+                    data: [], 
+                    borderColor: 'blue', 
+                    borderWidth: 2, 
+                    fill: false, 
+                    yAxisID: 'y' // bên trái
+                },
+                { 
+                    label: 'Humidity (%)', 
+                    data: [], 
+                    borderColor: 'orange', 
+                    borderWidth: 2, 
+                    fill: false, 
+                    yAxisID: 'y' // bên trái
+                },
+                { 
+                    label: 'Light (Lux)', 
+                    data: [], 
+                    borderColor: 'green', 
+                    borderWidth: 2, 
+                    fill: false, 
+                    yAxisID: 'y1' // bên phải
+                }
             ]
         },
         options: {
@@ -23,9 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     display: true,
                     position: 'top',
                     labels: {
-                        font: {
-                            size: 12
-                        }
+                        font: { size: 12 }
                     }
                 }
             },
@@ -34,34 +51,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     title: { 
                         display: true, 
                         text: 'TIME',
-                        font: {
-                            size: 14,
-                            weight: 'bold'
-                        }
+                        font: { size: 14, weight: 'bold' }
                     },
-                    ticks: {
-                        font: {
-                            size: 11
-                        }
-                    }
+                    ticks: { font: { size: 11 } }
                 },
-                y: {
+                y: { // trục trái
                     type: 'linear',
                     position: 'left',
                     title: { 
                         display: true, 
-                        text: 'Temperature (°C) / Humidity (%) / Light (Lux)',
-                        font: {
-                            size: 12,
-                            weight: 'bold'
-                        }
+                        text: 'Temperature (°C) / Humidity (%)',
+                        font: { size: 12, weight: 'bold' }
                     },
                     min: 0,
-                    max: 5000, // để đủ chứa cả Lux
-                    ticks: {
-                        font: {
-                            size: 11
-                        }
+                    max: 100,
+                    ticks: { font: { size: 11 } }
+                },
+                y1: { // trục phải cho Lux
+                    type: 'linear',
+                    position: 'right',
+                    title: { 
+                        display: true, 
+                        text: 'Light (Lux)',
+                        font: { size: 12, weight: 'bold' }
+                    },
+                    min: 0,
+                    max: 5000,
+                    ticks: { font: { size: 11 } },
+                    grid: {
+                        drawOnChartArea: false // không vẽ grid trùng
                     }
                 }
             }
@@ -84,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chart.data.datasets[1].data.push(data.humidity);
         chart.data.datasets[2].data.push(data.light);
 
-        if (chart.data.labels.length > 11) {
+        if (chart.data.labels.length > 14) {
             chart.data.labels.shift();
             chart.data.datasets.forEach(ds => ds.data.shift());
         }
