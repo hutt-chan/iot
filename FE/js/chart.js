@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     title: { 
                         display: true, 
                         text: 'TIME',
-                        font: { size: 14, weight: 'bold' }
+                        font: { size: 13, weight: 'bold' }
                     },
                     ticks: { font: { size: 11 } }
                 },
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chart.data.datasets[1].data.push(data.humidity);
         chart.data.datasets[2].data.push(data.light);
 
-        if (chart.data.labels.length > 14) {
+        if (chart.data.labels.length > 13) {
             chart.data.labels.shift();
             chart.data.datasets.forEach(ds => ds.data.shift());
         }

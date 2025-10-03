@@ -76,11 +76,11 @@ router.get("/latest", (req, res) => {
 });
 
 // ✅ API lấy toàn bộ dữ liệu (cho ds.html phân trang phía client)
-router.get("/all", (req, res) => {
-  db.query("SELECT * FROM sensor_data ORDER BY datetime DESC", (err, results) => {
-    if (err) throw err;
-    res.json(results);
-  });
-});
+// router.get("/all", (req, res) => {
+//   db.query("SELECT * FROM sensor_data ORDER BY datetime DESC", (err, results) => {
+//     if (err) throw err;
+//     res.json(results);
+//   });
+// });
 
 module.exports = router;

@@ -19,6 +19,11 @@ router.get("/", (req, res) => {
   const device = (req.query.device || "ALL").toUpperCase(); // mặc định ALL
   const action = (req.query.action || "ALL").toUpperCase(); // mặc định ALL
 
+    // Sort
+  const allowedSortColumns = ['id', 'device', 'action', 'datetime', 'description'];
+  const sortColumn = allowedSortColumns.includes(req.query.sortColumn) ? req.query.sortColumn : 'datetime';
+  const sortDirection = req.query.sortDirection === 'asc' ? 'ASC' : 'DESC';
+
   const whereClauses = [];
   const params = [];
 
@@ -74,14 +79,14 @@ if (device !== "ALL") {
 });
 
 // API lấy toàn bộ history (nếu FE vẫn cần)
-router.get("/all", (req, res) => {
-  db.query("SELECT * FROM history ORDER BY datetime DESC", (err, results) => {
-    if (err) {
-      console.error("DB all error:", err);
-      return res.status(500).json({ error: "DB error" });
-    }
-    res.json(results);
-  });
-});
+// router.get("/all", (req, res) => {
+//   db.query("SELECT * FROM history ORDER BY datetime DESC", (err, results) => {
+//     if (err) {
+//       console.error("DB all error:", err);
+//       return res.status(500).json({ error: "DB error" });
+//     }
+//     res.json(results);
+//   });
+// });
 
 module.exports = router;

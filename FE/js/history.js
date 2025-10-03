@@ -1,7 +1,11 @@
-let currentData = [];
-let filteredData = [];
 let currentPage = 1;
 const recordsPerPage = 10;
+let totalPages = 1;
+
+// Lưu filter/search hiện tại
+let currentSearch = '';
+let currentDevice = 'ALL';
+let currentAction = 'ALL';
 let sortColumn = -1;
 let sortDirection = 'asc';
 
@@ -23,66 +27,54 @@ function parseDateTime(str) {
     if (!datePart || !timePart) return new Date(str);
     const [day, month, year] = datePart.split('/').map(Number);
     const [hour, minute, second] = timePart.split(':').map(Number);
-    return new Date(year, (month || 1) - 1, day || 1, hour || 0, minute || 0, second || 0);
+    return new Date(year, (month || 1) - 1, day || 0, hour || 0, minute || 0, second || 0);
 }
 
-// Khởi tạo bảng
-async function initTable() {
-    await loadData();
-    displayData();
-    updatePagination();
-}
-
-// Tải dữ liệu từ API
+// Load dữ liệu từ server
 async function loadData() {
     try {
-        // const response = await fetch('http://localhost:3000/api/history?page=1&limit=1000');
-        const res = await fetch('http://localhost:3000/api/history/all');
-        const data = await res.json();
+        const url = new URL('http://localhost:3000/api/history');
+        url.searchParams.append('page', currentPage);
+        url.searchParams.append('limit', recordsPerPage);
+        if (currentSearch) url.searchParams.append('search', currentSearch);
+        if (currentDevice !== 'ALL') url.searchParams.append('device', currentDevice);
+        if (currentAction !== 'ALL') url.searchParams.append('action', currentAction);
 
-        
-        if (data && data.length > 0) {
-            currentData = data.map((item, index) => ({
-                id: item.id || (index + 1),
-                device: item.device || 'Unknown',
-                action: item.action || 'Unknown',
-                // time: formatDateTime(new Date(item.time)),
-                time: formatDateTime(new Date(item.datetime.replace(" ", "T"))),
-                description: item.description || 'No description'
-            }));
-            
-            filteredData = [...currentData];
-            console.log('Loaded history data from API:', currentData.length, 'records');
-            updateDataStatus(`Data from API (${currentData.length})`, 'success');
-        } else {
-            console.log('No history data found in API');
-            currentData = [];
-            filteredData = [];
-            updateDataStatus('No data', 'warning');
+        url.searchParams.append('sortColumn', ['id', 'device', 'action', 'datetime', 'description'][sortColumn] || 'datetime');
+        url.searchParams.append('sortDirection', sortDirection);
+
+        const res = await fetch(url);
+        const json = await res.json();
+
+        const pageData = json.data.map(item => ({
+            id: item.id,
+            device: item.device,
+            action: item.action,
+            time: formatDateTime(new Date(item.datetime.replace(" ", "T"))),
+            description: item.description || 'No description'
+        }));
+
+        // Sort page hiện tại nếu đã sort
+        if (sortColumn >= 0) {
+            sortPageData(pageData);
         }
-    } catch (error) {
-        console.error('Error loading history data:', error);
-        updateDataStatus('Error fetching API', 'error');
-        currentData = [];
-        filteredData = [];
+
+        displayData(pageData);
+        totalPages = json.totalPages;
+        updateTableInfo(json.total, json.page, json.limit);
+        updatePagination();
+    } catch (err) {
+        console.error('Load history failed:', err);
+        displayData([]);
+        updateTableInfo(0, 0, recordsPerPage);
     }
 }
 
-// Cập nhật trạng thái dữ liệu
-function updateDataStatus(message, type) {
-    const statusText = document.getElementById('statusText');
-    statusText.textContent = message;
-    statusText.className = type;
-}
-
-// Hiển thị dữ liệu
-function displayData() {
+// Hiển thị dữ liệu bảng
+function displayData(pageData) {
     const tbody = document.getElementById('tableBody');
-    const startIndex = (currentPage - 1) * recordsPerPage;
-    const endIndex = startIndex + recordsPerPage;
-    const pageData = filteredData.slice(startIndex, endIndex);
-
     tbody.innerHTML = '';
+
     pageData.forEach(row => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -94,62 +86,37 @@ function displayData() {
         `;
         tbody.appendChild(tr);
     });
-
-    updateTableInfo();
 }
 
 // Cập nhật thông tin bảng
-function updateTableInfo() {
-    const startIndex = (currentPage - 1) * recordsPerPage + 1;
-    const endIndex = Math.min(currentPage * recordsPerPage, filteredData.length);
-    document.getElementById('tableInfo').textContent = 
-        `Show ${startIndex}-${endIndex} of ${filteredData.length}`;
+function updateTableInfo(total, page, limit) {
+    const startIndex = (page - 1) * limit + 1;
+    const endIndex = Math.min(page * limit, total);
+    document.getElementById('tableInfo').textContent =
+        `Show ${startIndex}-${endIndex} of ${total}`;
 }
 
-// Tìm kiếm
+// Search
 function searchData() {
-    const searchTerm = document.getElementById('searchInput').value.trim();
-    
-    if (!searchTerm) {
-        filteredData = [...currentData];
-    } else {
-        filteredData = currentData.filter(row => row.time.toLowerCase().includes(searchTerm.toLowerCase()));
-    }
-    
+    currentSearch = document.getElementById('searchInput').value.trim();
     currentPage = 1;
-    displayData();
-    updatePagination();
+    loadData();
 }
 
-// Lọc
+// Filter
 function applyFilters() {
-    const deviceFilter = document.getElementById('deviceFilter').value;
-    const actionFilter = document.getElementById('actionFilter').value;
-    
-    filteredData = currentData.filter(row => {
-        let deviceMatch = deviceFilter === 'ALL' || row.device === deviceFilter;
-        let actionMatch = actionFilter === 'ALL' || row.action === actionFilter;
-        return deviceMatch && actionMatch;
-    });
-    
+    currentDevice = document.getElementById('deviceFilter').value;
+    currentAction = document.getElementById('actionFilter').value;
     currentPage = 1;
-    displayData();
-    updatePagination();
+    loadData();
 }
 
-// Sắp xếp
-function sortTable(columnIndex) {
-    if (sortColumn === columnIndex) {
-        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortColumn = columnIndex;
-        sortDirection = 'asc';
-    }
-
+// Sort page hiện tại
+function sortPageData(pageData) {
     const columnNames = ['id', 'device', 'action', 'time', 'description'];
-    const columnName = columnNames[columnIndex];
+    const columnName = columnNames[sortColumn];
 
-    filteredData.sort((a, b) => {
+    pageData.sort((a, b) => {
         let aVal = a[columnName];
         let bVal = b[columnName];
 
@@ -166,13 +133,26 @@ function sortTable(columnIndex) {
 
         return sortDirection === 'asc' ? (aVal > bVal ? 1 : -1) : (aVal < bVal ? 1 : -1);
     });
-
-    displayData();
 }
 
-// Phân trang
+// Gọi khi click header để sort
+function sortTable(columnIndex) {
+    const columnNames = ['id', 'device', 'action', 'datetime', 'description'];
+    const columnName = columnNames[columnIndex];
+
+    if (sortColumn === columnIndex) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortColumn = columnIndex;
+        sortDirection = 'asc';
+    }
+
+    currentPage = 1; // reset page khi sort
+    loadData();       // load lại dữ liệu từ server với sort
+}
+
+// Pagination
 function updatePagination() {
-    const totalPages = Math.ceil(filteredData.length / recordsPerPage);
     const pageNumbers = document.getElementById('pageNumbers');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
@@ -199,40 +179,31 @@ function updatePagination() {
 }
 
 function changePage(direction) {
-    const totalPages = Math.ceil(filteredData.length / recordsPerPage);
     const newPage = currentPage + direction;
-    
     if (newPage >= 1 && newPage <= totalPages) {
         currentPage = newPage;
-        displayData();
-        updatePagination();
+        loadData();
     }
 }
 
 function goToPage(page) {
-    currentPage = page;
-    displayData();
-    updatePagination();
-}
-
-// Search khi nhấn Enter
-document.getElementById('searchInput').addEventListener('keypress', function(event) {
-    if (event.key === 'Enter') {
-        searchData();
+    if (page >= 1 && page <= totalPages) {
+        currentPage = page;
+        loadData();
     }
-});
-
-// Hàm copy vào clipboard
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        console.log("Copied:", text);
-    }).catch(err => {
-        console.error("Failed to copy:", err);
-    });
 }
 
+// Copy datetime
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text)
+        .then(() => {
+            console.log("Copied:", text);
+        })
+        .catch(err => {
+            console.error("Failed to copy:", err);
+        });
+}
 
-// Gắn sự kiện cho cột DateTime (cột số 4 - index = 4)
 document.addEventListener("DOMContentLoaded", () => {
     const table = document.getElementById("dataTable");
 
@@ -241,16 +212,42 @@ document.addEventListener("DOMContentLoaded", () => {
             const datetimeValue = e.target.textContent.trim();
             copyToClipboard(datetimeValue);
 
-            // Hiệu ứng báo copy thành công
+            // Hiệu ứng đổi màu
+            e.target.style.transition = "background-color 0.3s";
             e.target.style.backgroundColor = "#667EEA";
             setTimeout(() => {
                 e.target.style.backgroundColor = "";
             }, 500);
+
+            // Thêm tooltip thông báo "Copied!"
+            const tooltip = document.createElement("span");
+            tooltip.textContent = "Copied!";
+            tooltip.style.position = "absolute";
+            tooltip.style.background = "#333";
+            tooltip.style.color = "#fff";
+            tooltip.style.padding = "3px 6px";
+            tooltip.style.borderRadius = "4px";
+            tooltip.style.fontSize = "12px";
+            tooltip.style.top = `${e.pageY - 30}px`;
+            tooltip.style.left = `${e.pageX}px`;
+            tooltip.style.opacity = "0.9";
+            tooltip.style.pointerEvents = "none";
+            document.body.appendChild(tooltip);
+
+            // Xóa tooltip sau 1 giây
+            setTimeout(() => {
+                document.body.removeChild(tooltip);
+            }, 1000);
         }
     });
 });
 
 
+// Khởi tạo khi load trang
+window.onload = () => {
+    loadData();
 
-// Khởi tạo khi tải trang
-window.onload = initTable;
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') searchData();
+    });
+};

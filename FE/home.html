@@ -26,51 +26,59 @@
         </nav>
     </header>
 
-    <section class="cards">
-        <div class="card temperature">
-            <div class="card-content">
-                ☀️Temperature <br>
-                <span id="temp" style="font-size: 60px; font-weight: 800">--℃</span>
+    <section class="cards-wrapper">
+        <img src="img/robot.png" alt="Monitor Image" class="monitor-img">
+        <div class="cards">
+            <div class="card temperature">
+                <div class="card-content">
+                    ☀️Temperature <br>
+                    <span id="temp" style="font-size: 60px; font-weight: 800">--℃</span>
+                </div>
             </div>
-        </div>
-        <div class="card humidity">
-            <div class="card-content">
-                💦Humidity <br>
-                <span id="humi" style="font-size: 60px; font-weight: 800">--%</span>
+            <div class="card humidity">
+                <div class="card-content">
+                    💦Humidity <br>
+                    <span id="humi" style="font-size: 60px; font-weight: 800">--%</span>
+                </div>
             </div>
-        </div>
-        <div class="card light">
-            <div class="card-content">
-                🌟Light <br>
-                <span id="light" style="font-size: 60px; font-weight: 800">-- lux</span>
+            <div class="card light">
+                <div class="card-content">
+                    🌟Light <br>
+                    <span id="light" style="font-size: 60px; font-weight: 800">-- lux</span>
+                </div>
             </div>
         </div>
     </section>
+
 
     <section class="content">
         <div class="chart">
             <canvas id="myChart"></canvas>
         </div>
         <div class="devices">
-            <h3 style="font-size: 35px; font-weight: bold;">Control Device</h3>
+            <h3 style="font-size: 30px; font-weight: bold;">Control Device</h3>
             <div class="device">Fan 🌀
                 <label class="switch">
                     <input type="checkbox" id="fan-switch">
                     <span class="slider"></span>
                 </label>
+                <img src="img/loading.gif" class="spinner" id="fan-spinner" style="display:none; width:24px; height:24px; margin-left:10px;">
             </div>
-            <div class="device">AC ❄️
+            <div class="device">Air Conditioner ❄️
                 <label class="switch">
                     <input type="checkbox" id="ac-switch">
                     <span class="slider"></span>
                 </label>
+                <img src="img/loading.gif" class="spinner" id="ac-spinner" style="display:none; width:24px; height:24px; margin-left:10px;">
             </div>
             <div class="device">Light 🌟
                 <label class="switch">
                     <input type="checkbox" id="light-switch">
                     <span class="slider"></span>
                 </label>
+                <img src="img/loading.gif" class="spinner" id="light-spinner" style="display:none; width:24px; height:24px; margin-left:10px;">
             </div>
+
         </div>
     </section>
 

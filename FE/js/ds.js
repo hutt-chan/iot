@@ -191,5 +191,55 @@ document.getElementById("searchInput").addEventListener("keypress", function(eve
     }
 });
 
+// Copy datetime
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text)
+        .then(() => {
+            console.log("Copied:", text);
+        })
+        .catch(err => {
+            console.error("Failed to copy:", err);
+        });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const table = document.getElementById("dataTable");
+
+    table.addEventListener("click", (e) => {
+        // Chỉ copy khi click cột datetime (cột thứ 5)
+        if (e.target.tagName === "TD" && e.target.cellIndex === 4) {
+            const datetimeValue = e.target.textContent.trim();
+            copyToClipboard(datetimeValue);
+
+            // Hiệu ứng đổi màu
+            e.target.style.transition = "background-color 0.3s";
+            e.target.style.backgroundColor = "#667EEA";
+            setTimeout(() => {
+                e.target.style.backgroundColor = "";
+            }, 500);
+
+            // Tạo tooltip nhỏ "Copied!"
+            const tooltip = document.createElement("span");
+            tooltip.textContent = "Copied!";
+            tooltip.style.position = "absolute";
+            tooltip.style.background = "#333";
+            tooltip.style.color = "#fff";
+            tooltip.style.padding = "3px 6px";
+            tooltip.style.borderRadius = "4px";
+            tooltip.style.fontSize = "12px";
+            tooltip.style.top = `${e.pageY - 30}px`;
+            tooltip.style.left = `${e.pageX}px`;
+            tooltip.style.opacity = "0.9";
+            tooltip.style.pointerEvents = "none";
+            document.body.appendChild(tooltip);
+
+            setTimeout(() => {
+                document.body.removeChild(tooltip);
+            }, 1000);
+        }
+    });
+});
+
+
 // Khởi tạo khi tải trang
 window.onload = initTable;

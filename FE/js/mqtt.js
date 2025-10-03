@@ -160,44 +160,65 @@ async function syncDeviceStatus() {
 }
 
 // Gắn event cho các switch
+// Map device -> spinner ID
+const spinnerMap = {
+    fan: document.getElementById("fan-spinner"),
+    air_conditioner: document.getElementById("ac-spinner"),
+    light: document.getElementById("light-spinner")
+};
+
 document.querySelectorAll(".devices input[type=checkbox]").forEach((el, idx) => {
     el.addEventListener("change", async () => {
-        let deviceName = "";
-        if (idx === 0) deviceName = "fan";
-        if (idx === 1) deviceName = "air_conditioner";
-        if (idx === 2) deviceName = "light";
-
-        // Lấy trạng thái mà user muốn (trạng thái mới sau click, nhưng sẽ revert để không thay đổi ngay)
+        let deviceName = idx === 0 ? "fan" : idx === 1 ? "air_conditioner" : "light";
         const desiredChecked = el.checked;
         const desiredAction = desiredChecked ? "ON" : "OFF";
 
-        // Revert switch về trạng thái cũ ngay lập tức để không thay đổi visual
+        // Revert switch để chờ lệnh
         el.checked = !desiredChecked;
 
-        // Vô hiệu hóa switch trong lúc gửi lệnh và chờ phản hồi
+        // Hiển thị spinner
+        spinnerMap[deviceName].style.display = "inline-block";
+
+        // Disable switch
         el.disabled = true;
-        
-        console.log(`User clicked ${deviceName} switch, requesting: ${desiredAction}, reverted switch temporarily`);
         
         const result = await controlDevice(deviceName, desiredAction);
         if (!result.ok) {
-            // Nếu gửi lệnh thất bại, enable lại mà không thay đổi
             el.disabled = false;
-            console.log(`Failed to send command for ${deviceName}, enabled switch without change`);
+            spinnerMap[deviceName].style.display = "none"; // ẩn spinner nếu thất bại
             return;
         }
-        
-        console.log(`Command sent for ${deviceName}, waiting for MQTT status update...`);
-        
-        // Để handle timeout (nếu không nhận MQTT sau 5s, enable lại và giữ nguyên trạng thái cũ)
+
+        // Timeout: nếu không nhận MQTT update sau 5s
         setTimeout(() => {
             if (el.disabled) {
                 el.disabled = false;
-                console.log(`Timeout waiting for MQTT for ${deviceName}, enabled switch without update`);
+                spinnerMap[deviceName].style.display = "none";
             }
         }, 5000);
     });
 });
+
+// Khi nhận MQTT update, ẩn spinner
+function updateDeviceSwitch(device, status) {
+    const deviceMap = { fan: 0, air_conditioner: 1, light: 2 };
+    const switchIndex = deviceMap[device];
+    if (switchIndex !== undefined) {
+        const switches = document.querySelectorAll(".devices input[type=checkbox]");
+        const isOn = status === "ON";
+        const now = Date.now();
+
+        if (switches[switchIndex].checked !== isOn && (now - lastUpdateTime[device]) > 500) {
+            switches[switchIndex].checked = isOn;
+            lastUpdateTime[device] = now;
+        }
+
+        // Luôn enable switch & ẩn spinner khi nhận MQTT
+        switches[switchIndex].disabled = false;
+        spinnerMap[device].style.display = "none";
+    }
+}
+
 
 // Cập nhật dữ liệu sensor mỗi 2s
 document.addEventListener('DOMContentLoaded', () => {

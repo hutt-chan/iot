@@ -67,22 +67,42 @@ nav a.active::after {
 }
 
 
+.cards-wrapper {
+    display: flex;
+    align-items: flex-start; /* căn ảnh và card theo trên cùng */
+    margin: 0px 30px 0 20px; /* lề trái rộng */
+    gap: 40px; /* khoảng cách giữa ảnh và cards */
+}
+
+.monitor-img {
+    width: 140px; /* giảm từ 200px xuống 120px */
+    height: auto;  /* giữ tỉ lệ ảnh */
+    border-radius: 10px; /* tùy chọn */
+    margin-left: 20px;
+    
+}
+
+
 .cards {
     display: flex;
-    justify-content: space-between;
-    margin: 0 40px 0 40px; /* Thay đổi giá trị lề trái */
+    justify-content: flex-end;
+    width: 100%;
+    margin-right: 10px;
+    /* padding-right: 10px; */
+    gap: 20px;
 }
 
 .card {
-    width: 450px;
+    width: 33%;
     height: 200px;
-    margin-top: 20px;
+    padding: 10px;
     border-radius: 10px;
     position: relative;
     background-size: cover;
     background-position: center;
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    flex-shrink: 0; /* không co nhỏ card khi container nhỏ */
 }
 
 .card::before {
@@ -108,6 +128,7 @@ nav a.active::after {
     text-align: center;
 }
 
+
 .temperature { background-image: url("../img/temp.gif"); }
 .humidity { background-image: url("../img/humid.gif"); }
 .light { background-image: url("../img/light.gif"); }
@@ -116,27 +137,22 @@ nav a.active::after {
     font-size: 40px;
 }
 
+/* Container chính cho chart và control devices */
 .content {
-    /* Sử dụng Flexbox để xếp các phần tử con cạnh nhau */
-    display: flex; 
-    
-    /* Căn lề các phần tử con ở đầu container */
-    align-items: flex-start; 
-
-    /* Tạo khoảng trống giữa các phần tử */
-    justify-content: space-between; 
-    
-    /* Đặt lề trái, phải của container */
-    padding: 40px 40px; 
+    display: flex;
+    align-items: flex-start; /* căn đầu theo chiều dọc */
+    justify-content: space-between; /* khoảng cách giữa chart và devices */
+    margin: 0 50px 0 50px; /* lề trái, phải */
+    padding: 20px 0;
 }
 
+/* Biểu đồ */
 .chart {
-    /* Đặt chiều rộng cho biểu đồ */
-    width: 70%; 
-    height: 500px;
-    background: white;
+    width: 70%;
+    height: 400px;
+    background: #fff;
     border-radius: 10px;
-    padding: 10px; /* Tăng padding để chart có không gian hơn */
+    padding: 10px;
     color: black;
     position: relative;
 }
@@ -146,48 +162,66 @@ nav a.active::after {
     height: 100% !important;
 }
 
+/* Devices control panel */
 .devices {
-    width: 25%; 
-    height: 380px;
-    background: white;
+    width: 28%;
+    min-width: 250px; /* đảm bảo không quá nhỏ */
+    height: 400px;
+    background: #fff;
     border-radius: 10px;
-    padding: 5px 20px 0px 20px;
+    padding: 20px 20px 10px 20px;
     color: #252525;
-    /* font-size: 40px; */
     font-weight: 700;
 
     display: flex;
     flex-direction: column;
-    align-items: center; /* căn giữa ngang tất cả */
+    align-items: center;
 }
-
 
 .devices h3 {
-    text-align: center; /* căn giữa chữ */
-    margin-bottom: 20px;
+    text-align: center;
+    margin: 20px 0;
 }
 
+/* Mỗi thiết bị */
 .device {
     font-size: 25px;
     display: flex;
-    flex-direction: row;   /* chữ và switch nằm ngang */
-    align-items: center;   /* căn giữa theo chiều dọc */
-    justify-content: space-between; /* tạo khoảng cách chữ - switch */
-    width: 100%;           /* cho chiếm hết ngang để justify có tác dụng */
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between; /* chữ và switch sát nhau */
+    width: 100%;
     margin: 15px 0;
+    position: relative; /* để spinner absolute */
 }
 
+/* Spinner */
+.device .switch {
+    flex-shrink: 0; /* không bị co lại */
+    margin-right: 30px; /* tạo khoảng trống cho spinner xuất hiện */
+}
 
+.device img.spinner {
+    /* width: 50px;
+    height:auto; */
+    position: absolute;
+    right: 0;      /* cố định vị trí bên phải */
+    top: 50%;      /* căn giữa theo chiều dọc */
+    transform: translateY(-50%);
+    display: none;
+}
 
 /* Toggle switch */
 .switch {
     position: relative;
     display: inline-block;
-    width: 80px;   /* nhỏ hơn */
-    height: 40px;  /* nhỏ hơn */
+    width: 70px; /* nhỏ gọn */
+    height: 36px; /* nhỏ gọn */
 }
 
-.switch input { display: none; }
+.switch input {
+    display: none;
+}
 
 .slider {
     position: absolute;
@@ -201,8 +235,8 @@ nav a.active::after {
 .slider:before {
     position: absolute;
     content: "";
-    height: 32px;   /* nhỏ hơn */
-    width: 32px;    /* nhỏ hơn */
+    height: 28px; /* nhỏ gọn */
+    width: 28px;  /* nhỏ gọn */
     left: 4px;
     bottom: 4px;
     background-color: white;
@@ -215,8 +249,9 @@ input:checked + .slider {
 }
 
 input:checked + .slider:before {
-    transform: translateX(40px); /* dịch vừa với size mới */
+    transform: translateX(34px); /* dịch vừa với size mới */
 }
+
 
 
 
