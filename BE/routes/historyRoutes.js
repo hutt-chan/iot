@@ -10,72 +10,85 @@ const router = express.Router();
 //  - search (chuỗi tìm kiếm theo định dạng dd/mm/yyyy HH:mm[:ss], partial ok)
 //  - device (ví dụ fan, air_conditioner, light) or "all" (mặc định)
 //  - action (ON / OFF) or "all" (mặc định)
+// API phân trang + tìm kiếm (chỉ theo datetime) + lọc device/action + sort server-side
 router.get("/", (req, res) => {
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 15;
-  const offset = (page - 1) * limit;
+  try {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 15;
+    const offset = (page - 1) * limit;
 
-  const search = (req.query.search || "").trim();
-  const device = (req.query.device || "ALL").toUpperCase(); // mặc định ALL
-  const action = (req.query.action || "ALL").toUpperCase(); // mặc định ALL
+    const search = (req.query.search || "").trim();
+    const device = (req.query.device || "ALL").toUpperCase();
+    const action = (req.query.action || "ALL").toUpperCase();
 
-    // Sort
-  const allowedSortColumns = ['id', 'device', 'action', 'datetime', 'description'];
-  const sortColumn = allowedSortColumns.includes(req.query.sortColumn) ? req.query.sortColumn : 'datetime';
-  const sortDirection = req.query.sortDirection === 'asc' ? 'ASC' : 'DESC';
+    // Sort params (string name, không index)
+    const allowedSortColumns = ['id', 'device', 'action', 'datetime', 'description'];
+    const sortColumn = allowedSortColumns.includes(req.query.sortColumn) ? req.query.sortColumn : 'datetime';
+    const sortDirectionRaw = req.query.sortDirection ? req.query.sortDirection.toLowerCase() : 'desc';
+    const sortDirection = sortDirectionRaw === 'asc' ? 'ASC' : 'DESC';
+    const orderBy = `ORDER BY ${sortColumn} ${sortDirection}`;
 
-  const whereClauses = [];
-  const params = [];
+    console.log('Raw query params:', req.query);
+    console.log('Parsed sort:', { sortColumn, sortDirection, orderBy });
 
-  // Search chỉ trên cột datetime — so sánh theo format dd/mm/YYYY HH:ii:ss
-  if (search) {
-  whereClauses.push("DATE_FORMAT(datetime, '%d/%m/%Y %H:%i:%s') LIKE ?");
-  params.push(`%${search}%`);
-  }
+    const whereClauses = [];
+    const params = [];
 
-  // Lọc device (nếu khác "all")
-if (device !== "ALL") {
-  whereClauses.push("device = ?");
-  params.push(device);
-  }
-
-
-  // Lọc action (nếu khác "ALL")
-  if (action !== "ALL") {
-  whereClauses.push("action = ?");
-  params.push(action);
-  }
-
-  const whereClause = whereClauses.length ? " WHERE " + whereClauses.join(" AND ") : "";
-
-  // Lấy tổng số bản ghi
-  const countSql = `SELECT COUNT(*) AS total FROM history ${whereClause}`;
-  db.query(countSql, params, (err, countResult) => {
-    if (err) {
-      console.error("DB count error:", err);
-      return res.status(500).json({ error: "DB error" });
+    // Search chỉ trên cột datetime
+    if (search) {
+      whereClauses.push("DATE_FORMAT(datetime, '%d/%m/%Y %H:%i:%s') LIKE ?");
+      params.push(`%${search}%`);
     }
 
-    const total = countResult[0].total || 0;
-    const totalPages = Math.max(1, Math.ceil(total / limit));
+    // Lọc device
+    if (device !== "ALL") {
+      whereClauses.push("device = ?");
+      params.push(device);
+    }
 
-    // Lấy dữ liệu thực tế với phân trang
-    const dataSql = `SELECT * FROM history ${whereClause} ORDER BY datetime DESC LIMIT ? OFFSET ?`;
-    db.query(dataSql, [...params, limit, offset], (err, results) => {
+    // Lọc action
+    if (action !== "ALL") {
+      whereClauses.push("action = ?");
+      params.push(action);
+    }
+
+    const whereClause = whereClauses.length ? " WHERE " + whereClauses.join(" AND ") : "";
+
+    // Lấy tổng số bản ghi
+    const countSql = `SELECT COUNT(*) AS total FROM history ${whereClause}`;
+    console.log('Full count SQL:', countSql, 'Params:', params);
+    db.query(countSql, params, (err, countResult) => {
       if (err) {
-        console.error("DB fetch error:", err);
+        console.error("DB count error:", err.message);
         return res.status(500).json({ error: "DB error" });
       }
 
-      res.json({
-        data: results,
-        total,
-        page,
-        limit,
-        totalPages
+      const total = countResult[0].total || 0;
+      const totalPages = Math.max(1, Math.ceil(total / limit));
+      console.log('Total records:', total);
+
+      // Lấy dữ liệu với phân trang + sort
+      const dataSql = `SELECT * FROM history ${whereClause} ${orderBy} LIMIT ? OFFSET ?`;
+      console.log('Full data SQL:', dataSql, 'Params:', [...params, limit, offset]);
+      db.query(dataSql, [...params, limit, offset], (err, results) => {
+        if (err) {
+          console.error("DB fetch error:", err.message);
+          return res.status(500).json({ error: "DB error" });
+        }
+
+        res.json({
+          data: results,
+          total,
+          page,
+          limit,
+          totalPages
+        });
       });
     });
-  });
+  } catch (error) {
+    console.error("Route /history error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // API lấy toàn bộ history (nếu FE vẫn cần)

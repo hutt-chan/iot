@@ -7,7 +7,7 @@ let currentSearch = '';
 let currentDevice = 'ALL';
 let currentAction = 'ALL';
 let sortColumn = -1;
-let sortDirection = 'asc';
+let sortDirection = 'desc';
 
 // Helper: format Date to dd/mm/yyyy hh:mm:ss
 function formatDateTime(dateObj) {
@@ -40,11 +40,25 @@ async function loadData() {
         if (currentDevice !== 'ALL') url.searchParams.append('device', currentDevice);
         if (currentAction !== 'ALL') url.searchParams.append('action', currentAction);
 
-        url.searchParams.append('sortColumn', ['id', 'device', 'action', 'datetime', 'description'][sortColumn] || 'datetime');
-        url.searchParams.append('sortDirection', sortDirection);
+        // Thêm sort params
+        const columnNames = ['id', 'device', 'action', 'datetime', 'description'];
+        const sortColName = sortColumn >= 0 ? columnNames[sortColumn] : 'datetime';
+        url.searchParams.append('sortColumn', sortColName);
+        url.searchParams.append('sortDirection', sortDirection); // Gửi lowercase 'desc' hoặc 'asc' để khớp backend
+
+        console.log('Sending sort params:', { sortColumn: sortColName, sortDirection, fullURL: url.toString() });
 
         const res = await fetch(url);
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
         const json = await res.json();
+
+        if (!json.data || !Array.isArray(json.data)) {
+            console.error('Invalid response data:', json);
+            displayData([]);
+            return;
+        }
 
         const pageData = json.data.map(item => ({
             id: item.id,
@@ -53,11 +67,6 @@ async function loadData() {
             time: formatDateTime(new Date(item.datetime.replace(" ", "T"))),
             description: item.description || 'No description'
         }));
-
-        // Sort page hiện tại nếu đã sort
-        if (sortColumn >= 0) {
-            sortPageData(pageData);
-        }
 
         displayData(pageData);
         totalPages = json.totalPages;
@@ -69,6 +78,21 @@ async function loadData() {
         updateTableInfo(0, 0, recordsPerPage);
     }
 }
+
+// Sort table
+function sortTable(columnIndex) {
+    if (sortColumn === columnIndex) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortColumn = columnIndex;
+        sortDirection = 'asc';
+    }
+
+    currentPage = 1;
+    loadData();
+}
+
+// Bỏ hàm sortPageData() vì không cần nữa
 
 // Hiển thị dữ liệu bảng
 function displayData(pageData) {
@@ -111,45 +135,6 @@ function applyFilters() {
     loadData();
 }
 
-// Sort page hiện tại
-function sortPageData(pageData) {
-    const columnNames = ['id', 'device', 'action', 'time', 'description'];
-    const columnName = columnNames[sortColumn];
-
-    pageData.sort((a, b) => {
-        let aVal = a[columnName];
-        let bVal = b[columnName];
-
-        if (columnName === 'time') {
-            aVal = parseDateTime(aVal);
-            bVal = parseDateTime(bVal);
-        } else if (columnName === 'id') {
-            aVal = parseInt(aVal);
-            bVal = parseInt(bVal);
-        } else {
-            aVal = aVal.toString().toLowerCase();
-            bVal = bVal.toString().toLowerCase();
-        }
-
-        return sortDirection === 'asc' ? (aVal > bVal ? 1 : -1) : (aVal < bVal ? 1 : -1);
-    });
-}
-
-// Gọi khi click header để sort
-function sortTable(columnIndex) {
-    const columnNames = ['id', 'device', 'action', 'datetime', 'description'];
-    const columnName = columnNames[columnIndex];
-
-    if (sortColumn === columnIndex) {
-        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortColumn = columnIndex;
-        sortDirection = 'asc';
-    }
-
-    currentPage = 1; // reset page khi sort
-    loadData();       // load lại dữ liệu từ server với sort
-}
 
 // Pagination
 function updatePagination() {

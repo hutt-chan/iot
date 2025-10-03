@@ -47,6 +47,14 @@ async function loadData() {
             url.searchParams.append("searchType", currentSearchType); // gửi type
         }
 
+        // Thêm sort params
+        if (sortColumn !== -1) {
+            url.searchParams.append("sortColumn", sortColumn);
+            url.searchParams.append("sortDirection", sortDirection);
+        }
+
+        console.log('Sending sort params:', { sortColumn, sortDirection, fullURL: url.toString() });
+
         const response = await fetch(url);
         const result = await response.json();
 
@@ -108,8 +116,8 @@ async function searchData() {
     updatePagination();
 }
 
-// Sắp xếp bảng (chỉ client)
-function sortTable(columnIndex) {
+// Sắp xếp bảng (gửi lên server)
+async function sortTable(columnIndex) {
     if (sortColumn === columnIndex) {
         sortDirection = sortDirection === "asc" ? "desc" : "asc";
     } else {
@@ -117,29 +125,13 @@ function sortTable(columnIndex) {
         sortDirection = "asc";
     }
 
-    const columnNames = ["id", "temperature", "humidity", "light", "datetime"];
-    const columnName = columnNames[columnIndex];
+    // Reset về trang 1 khi sort mới
+    currentPage = 1;
 
-    currentData.sort((a, b) => {
-        let aVal = a[columnName];
-        let bVal = b[columnName];
-
-        if (columnName === "datetime") {
-            aVal = parseDateTime(aVal);
-            bVal = parseDateTime(bVal);
-        } else {
-            aVal = parseFloat(aVal);
-            bVal = parseFloat(bVal);
-        }
-
-        if (sortDirection === "asc") {
-            return aVal > bVal ? 1 : -1;
-        } else {
-            return aVal < bVal ? 1 : -1;
-        }
-    });
-
+    // Reload data từ server với sort params
+    await loadData();
     displayData();
+    updatePagination();
 }
 
 // Phân trang

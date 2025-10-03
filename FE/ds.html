@@ -2,12 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Thêm này cho mobile -->
     <title>Monitor Dashboard</title>
-    <!-- <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet"> -->
-    <!-- <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"> -->
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
@@ -39,7 +36,7 @@
                         <option value="light">Light</option>
                         <option value="datetime">DateTime</option>
                     </select>
-                    <button onclick="searchData()">🔍︎ Search</button>
+                    <button type="button" onclick="searchData()">🔍︎ Search</button> <!-- Thêm type="button" -->
                 </div>
             </div>
         </div>
@@ -48,11 +45,11 @@
             <table id="dataTable">
                 <thead>
                     <tr>
-                        <th onclick="sortTable(0)">ID ↑↓</th>
-                        <th onclick="sortTable(1)">Temperature (°C) ↑↓</th>
-                        <th onclick="sortTable(2)">Humidity (%) ↑↓</th>
-                        <th onclick="sortTable(3)">Light (lux) ↑↓</th>
-                        <th onclick="sortTable(4)">DateTime ↑↓</th>
+                        <th onclick="sortTable(0)" role="button" tabindex="0" aria-label="Sort by ID">ID ↑↓</th> <!-- Thêm accessibility -->
+                        <th onclick="sortTable(1)" role="button" tabindex="0" aria-label="Sort by Temperature">Temperature (°C) ↑↓</th>
+                        <th onclick="sortTable(2)" role="button" tabindex="0" aria-label="Sort by Humidity">Humidity (%) ↑↓</th>
+                        <th onclick="sortTable(3)" role="button" tabindex="0" aria-label="Sort by Light">Light (lux) ↑↓</th>
+                        <th onclick="sortTable(4)" role="button" tabindex="0" aria-label="Sort by DateTime">DateTime ↑↓</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -70,7 +67,6 @@
         </div>
     </div>
 
-    <!-- JS tách riêng -->
     <script src="js/ds.js"></script>
 </body>
 </html>
