@@ -1,3 +1,4 @@
+// chart.js
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('myChart');
     if (!canvas) return;
@@ -14,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     borderColor: 'blue', 
                     borderWidth: 2, 
                     fill: false, 
-                    yAxisID: 'y' // bên trái
+                    yAxisID: 'y'
                 },
                 { 
                     label: 'Humidity (%)', 
@@ -22,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     borderColor: 'orange', 
                     borderWidth: 2, 
                     fill: false, 
-                    yAxisID: 'y' // bên trái
+                    yAxisID: 'y'
                 },
                 { 
                     label: 'Light (Lux)', 
@@ -30,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     borderColor: 'green', 
                     borderWidth: 2, 
                     fill: false, 
-                    yAxisID: 'y1' // bên phải
+                    yAxisID: 'y1'
                 }
             ]
         },
@@ -55,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     ticks: { font: { size: 11 } }
                 },
-                y: { // trục trái
+                y: {
                     type: 'linear',
                     position: 'left',
                     title: { 
@@ -67,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     max: 100,
                     ticks: { font: { size: 11 } }
                 },
-                y1: { // trục phải cho Lux
+                y1: {
                     type: 'linear',
                     position: 'right',
                     title: { 
@@ -79,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     max: 5000,
                     ticks: { font: { size: 11 } },
                     grid: {
-                        drawOnChartArea: false // không vẽ grid trùng
+                        drawOnChartArea: false
                     }
                 }
             }
@@ -96,6 +97,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (humiEl) humiEl.innerText = data.humidity + "%";
         if (lightEl) lightEl.innerText = data.light + " lux";
 
+        // QUAN TRỌNG: Kiểm tra device connected trước khi cập nhật biểu đồ
+        const isConnected = window.checkDeviceConnection && window.checkDeviceConnection(data);
+        
+        if (!isConnected) {
+            console.log("⏸️ Chart: Device disconnected, skipping chart update");
+            return; // DỪNG CẬP NHẬT BIỂU ĐỒ
+        }
+
+        console.log("✅ Chart: Device connected, updating chart");
+
         const timeLabel = new Date().toLocaleTimeString();
         chart.data.labels.push(timeLabel);
         chart.data.datasets[0].data.push(data.temperature);
@@ -110,5 +121,12 @@ document.addEventListener('DOMContentLoaded', () => {
         chart.update();
     }
 
+    // Hàm dừng biểu đồ
+    function pauseChart() {
+        console.log("⏸️ Chart updates paused");
+    }
+
+    // Expose functions to global scope
     window.updateDashboard = updateDashboard;
+    window.pauseChart = pauseChart;
 });

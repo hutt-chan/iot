@@ -1,6 +1,6 @@
 let currentData = [];
 let currentPage = 1;
-const recordsPerPage = 10;
+let recordsPerPage = 10; // Biến động, default 10
 let totalPages = 1;
 let sortColumn = -1;
 let sortDirection = 'asc';
@@ -30,21 +30,40 @@ function parseDateTime(str) {
 
 // Khởi tạo bảng
 async function initTable() {
+    // Set initial recordsPerPage từ select
+    const select = document.getElementById("recordsPerPageSelect");
+    if (select) {
+        recordsPerPage = parseInt(select.value) || 10;
+    }
     await loadData();
     displayData();
     updatePagination();
 }
 
-// Tải dữ liệu từ API (có phân trang & tìm kiếm ở BE)
+// Thay đổi số lượng bản ghi mỗi trang
+function changeRecordsPerPage() {
+    const select = document.getElementById("recordsPerPageSelect");
+    if (select) {
+        recordsPerPage = parseInt(select.value) || 10;
+        currentPage = 1; // Reset về trang 1
+        loadData().then(() => {
+            displayData();
+            updatePagination();
+            updateTableInfo();
+        });
+    }
+}
+
+// Tải dữ liệu từ API (có phân trang & tìm kiếm & limit dynamic ở BE)
 async function loadData() {
     try {
         const url = new URL("http://localhost:3000/api/sensor/data");
         url.searchParams.append("page", currentPage);
-        url.searchParams.append("limit", recordsPerPage);
+        url.searchParams.append("limit", recordsPerPage); // Gửi limit dynamic
 
         if (currentSearch) {
             url.searchParams.append("search", currentSearch);
-            url.searchParams.append("searchType", currentSearchType); // gửi type
+            url.searchParams.append("searchType", currentSearchType);
         }
 
         // Thêm sort params
@@ -53,7 +72,7 @@ async function loadData() {
             url.searchParams.append("sortDirection", sortDirection);
         }
 
-        console.log('Sending sort params:', { sortColumn, sortDirection, fullURL: url.toString() });
+        console.log('Sending sort params:', { sortColumn, sortDirection, limit: recordsPerPage, fullURL: url.toString() });
 
         const response = await fetch(url);
         const result = await response.json();
@@ -68,14 +87,13 @@ async function loadData() {
 
         totalPages = result.totalPages;
 
-        console.log(`Loaded page ${currentPage}, ${currentData.length} records`);
+        console.log(`Loaded page ${currentPage}, ${currentData.length} records (limit: ${recordsPerPage})`);
     } catch (error) {
         console.error("Error loading data:", error);
         currentData = [];
         totalPages = 1;
     }
 }
-
 
 // Hiển thị dữ liệu
 function displayData() {
@@ -101,7 +119,7 @@ function displayData() {
 function updateTableInfo() {
     const startIndex = (currentPage - 1) * recordsPerPage + 1;
     const endIndex = startIndex + currentData.length - 1;
-    const total = totalPages * recordsPerPage;
+    const total = totalPages * recordsPerPage; // Dùng recordsPerPage dynamic
     document.getElementById("tableInfo").textContent =
         `Show ${startIndex}-${endIndex} of ~${total}`;
 }
@@ -125,10 +143,7 @@ async function sortTable(columnIndex) {
         sortDirection = "asc";
     }
 
-    // Reset về trang 1 khi sort mới
     currentPage = 1;
-
-    // Reload data từ server với sort params
     await loadData();
     displayData();
     updatePagination();
@@ -177,40 +192,32 @@ async function changePage(direction) {
 }
 
 // Tìm kiếm khi nhấn Enter
-document.getElementById("searchInput").addEventListener("keypress", function(event) {
-    if (event.key === "Enter") {
-        searchData();
-    }
-});
-
-// Copy datetime
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text)
-        .then(() => {
-            console.log("Copied:", text);
-        })
-        .catch(err => {
-            console.error("Failed to copy:", err);
-        });
-}
-
 document.addEventListener("DOMContentLoaded", () => {
-    const table = document.getElementById("dataTable");
+    document.getElementById("searchInput").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            searchData();
+        }
+    });
 
+    // Event cho records per page select (nếu onchange inline chưa đủ)
+    const recordsSelect = document.getElementById("recordsPerPageSelect");
+    if (recordsSelect) {
+        recordsSelect.addEventListener("change", changeRecordsPerPage);
+    }
+
+    // Copy datetime event (giữ nguyên)
+    const table = document.getElementById("dataTable");
     table.addEventListener("click", (e) => {
-        // Chỉ copy khi click cột datetime (cột thứ 5)
         if (e.target.tagName === "TD" && e.target.cellIndex === 4) {
             const datetimeValue = e.target.textContent.trim();
             copyToClipboard(datetimeValue);
 
-            // Hiệu ứng đổi màu
             e.target.style.transition = "background-color 0.3s";
             e.target.style.backgroundColor = "#667EEA";
             setTimeout(() => {
                 e.target.style.backgroundColor = "";
             }, 500);
 
-            // Tạo tooltip nhỏ "Copied!"
             const tooltip = document.createElement("span");
             tooltip.textContent = "Copied!";
             tooltip.style.position = "absolute";
@@ -232,6 +239,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+// Copy datetime
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text)
+        .then(() => {
+            console.log("Copied:", text);
+        })
+        .catch(err => {
+            console.error("Failed to copy:", err);
+        });
+}
 
 // Khởi tạo khi tải trang
 window.onload = initTable;

@@ -527,6 +527,56 @@ tr:hover {
     font-weight: 600;
 }
 
+.records-per-page {
+    display: flex;
+    gap: 10px; /* Giống search-box gap */
+    align-items: center;
+    margin-top: 10px; /* Giữ khoảng cách dưới search-box */
+    font-size: 16px; /* Match font-size của input/select */
+}
+
+.records-per-page label {
+    font-weight: 500; /* Giống text bold nhẹ */
+    color: #313131; /* Match body color */
+    white-space: nowrap; /* Không wrap line */
+}
+
+#recordsPerPageSelect {
+    padding: 12px 16px; /* Giống input/select trong search-box */
+    border: 2px solid #ddd; /* Border giống */
+    border-radius: 8px; /* Radius giống */
+    font-size: 16px; /* Font-size giống */
+    background: white; /* Background trắng */
+    cursor: pointer; /* Cursor pointer */
+    min-width: 80px; /* Min width nhỏ gọn */
+    transition: all 0.3s ease; /* Transition đầy đủ như input/select */
+}
+
+#recordsPerPageSelect:focus {
+    outline: none;
+    border-color: #667EEA; /* Focus border giống */
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2); /* Shadow focus giống */
+}
+
+#recordsPerPageSelect:hover {
+    border-color: #667EEA; /* Hover border giống */
+    transform: translateY(-1px); /* Nâng nhẹ giống nút hover */
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1); /* Shadow hover giống */
+}
+
+/* Responsive cho mobile (giống search-box nếu có) */
+@media (max-width: 720px) {
+    .records-per-page {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px; /* Giảm gap nhỏ hơn */
+    }
+    #recordsPerPageSelect {
+        width: 100%; /* Full width trên mobile */
+        min-width: auto;
+    }
+}
+
 /* History table styles */
 .device-cell {
     color: #2c3e50;

@@ -1,5 +1,5 @@
 let currentPage = 1;
-const recordsPerPage = 10;
+let recordsPerPage = 10; // Biến động, default 10
 let totalPages = 1;
 
 // Lưu filter/search hiện tại
@@ -30,12 +30,22 @@ function parseDateTime(str) {
     return new Date(year, (month || 1) - 1, day || 0, hour || 0, minute || 0, second || 0);
 }
 
+// Thay đổi số lượng bản ghi mỗi trang (async để await loadData)
+async function changeRecordsPerPage() {
+    const select = document.getElementById("recordsPerPageSelect");
+    if (select) {
+        recordsPerPage = parseInt(select.value) || 10;
+        currentPage = 1; // Reset về trang 1
+        await loadData(); // Await để loadData handle displayData + update
+    }
+}
+
 // Load dữ liệu từ server
 async function loadData() {
     try {
         const url = new URL('http://localhost:3000/api/history');
         url.searchParams.append('page', currentPage);
-        url.searchParams.append('limit', recordsPerPage);
+        url.searchParams.append('limit', recordsPerPage); // Gửi limit dynamic
         if (currentSearch) url.searchParams.append('search', currentSearch);
         if (currentDevice !== 'ALL') url.searchParams.append('device', currentDevice);
         if (currentAction !== 'ALL') url.searchParams.append('action', currentAction);
@@ -46,7 +56,7 @@ async function loadData() {
         url.searchParams.append('sortColumn', sortColName);
         url.searchParams.append('sortDirection', sortDirection); // Gửi lowercase 'desc' hoặc 'asc' để khớp backend
 
-        console.log('Sending sort params:', { sortColumn: sortColName, sortDirection, fullURL: url.toString() });
+        console.log('Sending sort params:', { sortColumn: sortColName, sortDirection, limit: recordsPerPage, fullURL: url.toString() });
 
         const res = await fetch(url);
         if (!res.ok) {
@@ -56,7 +66,9 @@ async function loadData() {
 
         if (!json.data || !Array.isArray(json.data)) {
             console.error('Invalid response data:', json);
-            displayData([]);
+            displayData([]); // Truyền [] để tránh undefined
+            updateTableInfo(0, currentPage, recordsPerPage);
+            updatePagination();
             return;
         }
 
@@ -68,14 +80,15 @@ async function loadData() {
             description: item.description || 'No description'
         }));
 
-        displayData(pageData);
+        displayData(pageData); // Truyền pageData
         totalPages = json.totalPages;
-        updateTableInfo(json.total, json.page, json.limit);
+        updateTableInfo(json.total, json.page, recordsPerPage); // Dùng recordsPerPage dynamic
         updatePagination();
     } catch (err) {
         console.error('Load history failed:', err);
-        displayData([]);
-        updateTableInfo(0, 0, recordsPerPage);
+        displayData([]); // Truyền [] an toàn
+        updateTableInfo(0, currentPage, recordsPerPage);
+        updatePagination();
     }
 }
 
@@ -92,14 +105,12 @@ function sortTable(columnIndex) {
     loadData();
 }
 
-// Bỏ hàm sortPageData() vì không cần nữa
-
 // Hiển thị dữ liệu bảng
-function displayData(pageData) {
+function displayData(pageData = []) { // Default [] để tránh undefined
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = '';
 
-    pageData.forEach(row => {
+    pageData.forEach(row => { // Bây giờ an toàn
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${row.id}</td>
@@ -134,7 +145,6 @@ function applyFilters() {
     currentPage = 1;
     loadData();
 }
-
 
 // Pagination
 function updatePagination() {
@@ -190,6 +200,13 @@ function copyToClipboard(text) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Set initial recordsPerPage từ select
+    const recordsSelect = document.getElementById("recordsPerPageSelect");
+    if (recordsSelect) {
+        recordsPerPage = parseInt(recordsSelect.value) || 10;
+        recordsSelect.addEventListener("change", changeRecordsPerPage); // Event listener
+    }
+
     const table = document.getElementById("dataTable");
 
     table.addEventListener("click", (e) => {

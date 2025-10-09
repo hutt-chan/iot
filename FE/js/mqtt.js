@@ -9,6 +9,33 @@ const lastUpdateTime = {
     light: 0
 };
 
+// Track device connection status
+let deviceConnected = true;
+let chartUpdateInterval = null;
+
+// Hàm kiểm tra trạng thái kết nối thiết bị - THÊM VÀO WINDOW
+window.checkDeviceConnection = function(sensorData) {
+    if (!sensorData) return false;
+    
+    console.log("🔍 Checking device connection:", sensorData);
+    
+    // Kiểm tra dựa trên dữ liệu sensor
+    const isDisconnected = 
+        (sensorData.temperature === 0 || sensorData.temperature === null) && 
+        (sensorData.humidity === 0 || sensorData.humidity === null) && 
+        (sensorData.light === 0 || sensorData.light === null);
+    
+    // Kiểm tra timestamp
+    const currentTime = new Date().getTime();
+    const dataTime = sensorData.timestamp ? new Date(sensorData.timestamp).getTime() : currentTime;
+    const isDataStale = (currentTime - dataTime) > 30000;
+    
+    const connected = !(isDisconnected || isDataStale);
+    console.log(`📡 Device connected: ${connected}`);
+    
+    return connected;
+}
+
 // Kết nối MQTT
 function connectMQTT() {
     try {
@@ -57,6 +84,83 @@ function connectMQTT() {
     }
 }
 
+// Hàm kiểm tra trạng thái kết nối thiết bị
+function checkDeviceConnection(sensorData) {
+    if (!sensorData) return false;
+    
+    // Kiểm tra dựa trên dữ liệu sensor
+    // Nếu tất cả giá trị = 0 hoặc không hợp lệ, coi như disconnected
+    const isDisconnected = 
+        (sensorData.temperature === 0 || sensorData.temperature === null) && 
+        (sensorData.humidity === 0 || sensorData.humidity === null) && 
+        (sensorData.light === 0 || sensorData.light === null);
+    
+    // Hoặc kiểm tra timestamp (nếu dữ liệu quá cũ)
+    const currentTime = new Date().getTime();
+    const dataTime = sensorData.timestamp ? new Date(sensorData.timestamp).getTime() : currentTime;
+    const isDataStale = (currentTime - dataTime) > 30000; // 30 giây
+    
+    return !(isDisconnected || isDataStale);
+}
+
+// Hàm dừng cập nhật biểu đồ
+function stopChartUpdates() {
+    if (chartUpdateInterval) {
+        clearInterval(chartUpdateInterval);
+        chartUpdateInterval = null;
+    }
+    
+    // Dừng animation biểu đồ nếu có
+    if (window.pauseChart) {
+        window.pauseChart();
+    }
+}
+
+// Hàm hiển thị trạng thái disconnected
+function showDisconnectedStatus() {
+    // Thêm indicator vào UI
+    const statusIndicator = document.getElementById('device-status') || createStatusIndicator();
+    statusIndicator.innerHTML = '🔴 Thiết bị ngắt kết nối';
+    statusIndicator.style.color = '#ff4444';
+    
+    // Hiển thị giá trị mặc định
+    const tempEl = document.getElementById("temp");
+    const humiEl = document.getElementById("humi");
+    const lightEl = document.getElementById("light");
+    
+    if (tempEl) tempEl.innerText = "-- ℃";
+    if (humiEl) humiEl.innerText = "-- %";
+    if (lightEl) lightEl.innerText = "-- lux";
+}
+
+// Hàm hiển thị trạng thái connected
+function showConnectedStatus() {
+    const statusIndicator = document.getElementById('device-status');
+    if (statusIndicator) {
+        statusIndicator.innerHTML = '🟢 Thiết bị đã kết nối';
+        statusIndicator.style.color = '#00c853';
+    }
+}
+
+// Tạo indicator nếu chưa có
+function createStatusIndicator() {
+    const indicator = document.createElement('div');
+    indicator.id = 'device-status';
+    indicator.style.cssText = `
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        z-index: 1000;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    `;
+    document.body.appendChild(indicator);
+    return indicator;
+}
+
 // Cập nhật switch dựa trên trạng thái từ MQTT
 function updateDeviceSwitch(device, status) {
     const deviceMap = {
@@ -90,10 +194,21 @@ function updateDeviceSwitch(device, status) {
             
             // Re-enable switch sau khi nhận được MQTT update
             switches[switchIndex].disabled = false;
+            
+            // Ẩn spinner khi nhận MQTT update
+            const spinnerMap = {
+                'fan': document.getElementById("fan-spinner"),
+                'air_conditioner': document.getElementById("ac-spinner"),
+                'light': document.getElementById("light-spinner")
+            };
+            if (spinnerMap[device]) {
+                spinnerMap[device].style.display = "none";
+            }
         }
     }
 }
 
+// Kết nối tới backend để load dữ liệu sensor mới nhất định kỳ
 // Kết nối tới backend để load dữ liệu sensor mới nhất định kỳ
 async function fetchLatestSensor() {
     try {
@@ -101,9 +216,36 @@ async function fetchLatestSensor() {
         const data = await res.json();
 
         if (data) {
-            if (typeof window !== 'undefined' && typeof window.updateDashboard === 'function') {
-                window.updateDashboard(data);
+            // Kiểm tra trạng thái kết nối - SỬA THÀNH window.checkDeviceConnection
+            const isConnected = window.checkDeviceConnection(data);
+            
+            if (!isConnected && deviceConnected) {
+                // Chuyển từ connected sang disconnected
+                console.log("⚠️ Device disconnected - stopping chart updates");
+                deviceConnected = false;
+                stopChartUpdates();
+                showDisconnectedStatus();
+            } else if (isConnected && !deviceConnected) {
+                // Chuyển từ disconnected sang connected
+                console.log("✅ Device reconnected - resuming chart updates");
+                deviceConnected = true;
+                showConnectedStatus();
+            }
+            
+            // Chỉ cập nhật dashboard nếu device connected
+            if (deviceConnected) {
+                if (typeof window !== 'undefined' && typeof window.updateDashboard === 'function') {
+                    window.updateDashboard(data);
+                } else {
+                    const tempEl = document.getElementById("temp");
+                    const humiEl = document.getElementById("humi");
+                    const lightEl = document.getElementById("light");
+                    if (tempEl) tempEl.innerText = data.temperature + "℃";
+                    if (humiEl) humiEl.innerText = data.humidity + "%";
+                    if (lightEl) lightEl.innerText = data.light + " lux";
+                }
             } else {
+                // Nếu disconnected, vẫn hiển thị giá trị nhưng với style khác
                 const tempEl = document.getElementById("temp");
                 const humiEl = document.getElementById("humi");
                 const lightEl = document.getElementById("light");
@@ -114,6 +256,12 @@ async function fetchLatestSensor() {
         }
     } catch (err) {
         console.error("Lỗi fetch sensor:", err);
+        // Nếu fetch lỗi, coi như disconnected
+        if (deviceConnected) {
+            deviceConnected = false;
+            stopChartUpdates();
+            showDisconnectedStatus();
+        }
     }
 }
 
@@ -177,7 +325,9 @@ document.querySelectorAll(".devices input[type=checkbox]").forEach((el, idx) => 
         el.checked = !desiredChecked;
 
         // Hiển thị spinner
-        spinnerMap[deviceName].style.display = "inline-block";
+        if (spinnerMap[deviceName]) {
+            spinnerMap[deviceName].style.display = "inline-block";
+        }
 
         // Disable switch
         el.disabled = true;
@@ -185,7 +335,9 @@ document.querySelectorAll(".devices input[type=checkbox]").forEach((el, idx) => 
         const result = await controlDevice(deviceName, desiredAction);
         if (!result.ok) {
             el.disabled = false;
-            spinnerMap[deviceName].style.display = "none"; // ẩn spinner nếu thất bại
+            if (spinnerMap[deviceName]) {
+                spinnerMap[deviceName].style.display = "none"; // ẩn spinner nếu thất bại
+            }
             return;
         }
 
@@ -193,41 +345,44 @@ document.querySelectorAll(".devices input[type=checkbox]").forEach((el, idx) => 
         setTimeout(() => {
             if (el.disabled) {
                 el.disabled = false;
-                spinnerMap[deviceName].style.display = "none";
+                if (spinnerMap[deviceName]) {
+                    spinnerMap[deviceName].style.display = "none";
+                }
             }
         }, 5000);
     });
 });
 
-// Khi nhận MQTT update, ẩn spinner
-function updateDeviceSwitch(device, status) {
-    const deviceMap = { fan: 0, air_conditioner: 1, light: 2 };
-    const switchIndex = deviceMap[device];
-    if (switchIndex !== undefined) {
-        const switches = document.querySelectorAll(".devices input[type=checkbox]");
-        const isOn = status === "ON";
-        const now = Date.now();
-
-        if (switches[switchIndex].checked !== isOn && (now - lastUpdateTime[device]) > 500) {
-            switches[switchIndex].checked = isOn;
-            lastUpdateTime[device] = now;
+// Khởi tạo biểu đồ với cơ chế interval
+function initializeChartWithInterval() {
+    // Nếu bạn đang dùng biểu đồ real-time
+    chartUpdateInterval = setInterval(() => {
+        if (deviceConnected && window.addChartData) {
+            // Chỉ thêm điểm dữ liệu nếu device connected
+            // Hàm fetchLatestSensor sẽ gọi addChartData
         }
-
-        // Luôn enable switch & ẩn spinner khi nhận MQTT
-        switches[switchIndex].disabled = false;
-        spinnerMap[device].style.display = "none";
-    }
+    }, 3000);
 }
 
-
-// Cập nhật dữ liệu sensor mỗi 2s
+// Cập nhật dữ liệu sensor mỗi 3s
 document.addEventListener('DOMContentLoaded', () => {
+    // Tạo status indicator
+    createStatusIndicator();
+    
+    // Load dữ liệu ban đầu
     fetchLatestSensor();
-    setInterval(fetchLatestSensor, 2000);
+    
+    // Cập nhật sensor mỗi 3s nhưng có kiểm tra trạng thái
+    setInterval(fetchLatestSensor, 3000);
+    
     // Đồng bộ trạng thái thiết bị khi trang tải
     syncDeviceStatus();
+    
     // Kết nối MQTT để nhận trạng thái real-time
     connectMQTT();
+    
+    // Khởi tạo biểu đồ
+    initializeChartWithInterval();
     
     // Tắt đồng bộ định kỳ để tránh conflict với MQTT real-time
     // setInterval(syncDeviceStatus, 5000); // Đã comment out
