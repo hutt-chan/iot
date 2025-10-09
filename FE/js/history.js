@@ -51,7 +51,7 @@ async function loadData() {
         if (currentAction !== 'ALL') url.searchParams.append('action', currentAction);
 
         // Thêm sort params
-        const columnNames = ['id', 'device', 'action', 'datetime', 'description'];
+        const columnNames = ['id', 'device', 'action', 'datetime']; // Bỏ 'description'
         const sortColName = sortColumn >= 0 ? columnNames[sortColumn] : 'datetime';
         url.searchParams.append('sortColumn', sortColName);
         url.searchParams.append('sortDirection', sortDirection); // Gửi lowercase 'desc' hoặc 'asc' để khớp backend
@@ -76,8 +76,8 @@ async function loadData() {
             id: item.id,
             device: item.device,
             action: item.action,
-            time: formatDateTime(new Date(item.datetime.replace(" ", "T"))),
-            description: item.description || 'No description'
+            time: formatDateTime(new Date(item.datetime.replace(" ", "T")))
+            // Bỏ description
         }));
 
         displayData(pageData); // Truyền pageData
@@ -117,7 +117,7 @@ function displayData(pageData = []) { // Default [] để tránh undefined
             <td class="device-cell">${row.device}</td>
             <td class="action-cell">${row.action}</td>
             <td>${row.time}</td>
-            <td>${row.description}</td>
+            <!-- Bỏ <td>${row.description}</td> -->
         `;
         tbody.appendChild(tr);
     });
